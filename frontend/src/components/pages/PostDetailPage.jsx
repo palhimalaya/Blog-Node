@@ -94,7 +94,7 @@ const PostDetailPage = () => {
       {loading ? (
         <div className="text-center">
           <p className="text-2xl font-semibold mb-4">Loading...</p>
-          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+          {/* <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div> */}
         </div>
       ) : (
         <div className="max-w-3xl w-full p-6 bg-white rounded-lg shadow-md mt-4">

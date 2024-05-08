@@ -33,9 +33,6 @@ const RoleAccess = ({ roles }) => {
     }
   }, []);
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
 
   return !roles.length || roles.includes(user?.role) ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };

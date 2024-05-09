@@ -216,7 +216,7 @@ const PostDetailPage = () => {
         isOpen={isModalOpen}
         onClose={closeModal}
         onConfirm={handleDelete}
-        message="Are you sure you want to delete this post?"
+        message="Are you sure you want to delete this Comment?"
       />
     </div>
   );

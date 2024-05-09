@@ -48,7 +48,7 @@ const updateComment = async (req, res) => {
         message: "Comment not found",
       });
     }
-    if(comment.author.toString() !== req.user._id.toString()){
+    if(comment.author.toString() !== req.user._id.toString() && req.user.role !== 'admin'){
       return res.status(403).json({
         message: "You are not authorized to update this comment",
       });
@@ -75,7 +75,7 @@ const deleteComment = async (req, res) =>{
         message: "Comment not found",
       });
     }
-    if(comment.author.toString() !== req.user._id.toString()){
+    if(comment.author.toString() !== req.user._id.toString() && req.user.role !== 'admin'){
       return res.status(403).json({
         message: "You are not authorized to delete this comment",
       });

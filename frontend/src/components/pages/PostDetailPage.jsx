@@ -3,13 +3,16 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { UserContext } from "../../context/UserContext";
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from "lucide-react";
+import AlertModal from "../AlertModal";
 
 const PostDetailPage = () => {
   const [post, setPost] = useState({});
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [editedCommentText, setEditedCommentText] = useState("");
   const { id } = useParams();
   const token = localStorage.getItem("token");
@@ -40,7 +43,10 @@ const PostDetailPage = () => {
         { headers: { Authorization: token } }
       );
       const newComment = response.data.comment;
-      setPost((prevPost) => ({ ...prevPost, comments: [...prevPost.comments, newComment] }));
+      setPost((prevPost) => ({
+        ...prevPost,
+        comments: [...prevPost.comments, newComment],
+      }));
       toast.success("Comment added successfully");
       setCommentText("");
     } catch (error) {
@@ -63,7 +69,9 @@ const PostDetailPage = () => {
         { headers: { Authorization: token } }
       );
       const updatedComments = post.comments.map((comment) =>
-        comment._id === commentId ? { ...comment, content: editedCommentText } : comment
+        comment._id === commentId
+          ? { ...comment, content: editedCommentText }
+          : comment
       );
       setPost((prevPost) => ({ ...prevPost, comments: updatedComments }));
       toast.success("Comment updated successfully");
@@ -75,18 +83,31 @@ const PostDetailPage = () => {
     }
   };
 
-  const handleDelete = async (commentId) => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      try {
-        await axios.delete(`/comments/${commentId}`, { headers: { Authorization: token } });
-        const updatedComments = post.comments.filter((comment) => comment._id !== commentId);
-        setPost((prevPost) => ({ ...prevPost, comments: updatedComments }));
-        toast.success("Comment deleted successfully");
-      } catch (error) {
-        toast.error(error.response.data.message);
-        console.error("Error deleting comment:", error);
-      }
-  } 
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/comments/${deletingCommentId}`, {
+        headers: { Authorization: token },
+      });
+      const updatedComments = post.comments.filter(
+        (comment) => comment._id !== deletingCommentId
+      );
+      setPost((prevPost) => ({ ...prevPost, comments: updatedComments }));
+      toast.success("Comment deleted successfully");
+      closeModal();
+    } catch (error) {
+      toast.error(error.response.data.message);
+      console.error("Error deleting comment:", error);
+      closeModal();
+    }
+  };
+
+  const openModal = (postId) => {
+    setDeletingCommentId(postId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -104,17 +125,15 @@ const PostDetailPage = () => {
 
           <div className="mt-6">
             <h3 className="text-xl font-bold mb-2">Add Comment</h3>
-            {
-              !user?._id && (
-                <p className="text-gray-600 mb-2">
-                  Please{" "}
-                  <a href="/login" className="text-blue-500 hover:underline">
-                    login
-                  </a>{" "}
-                  to add a comment
-                </p>
-              )
-            }
+            {!user?._id && (
+              <p className="text-gray-600 mb-2">
+                Please{" "}
+                <a href="/login" className="text-blue-500 hover:underline">
+                  login
+                </a>{" "}
+                to add a comment
+              </p>
+            )}
             <form onSubmit={handleSubmitComment}>
               <textarea
                 className="w-full h-24 p-2 border rounded"
@@ -168,13 +187,20 @@ const PostDetailPage = () => {
                         Posted by {comment.author.full_name}
                       </p>
                     </div>
-                    {user?._id === comment.author._id && (
+                    {(user?._id === comment.author._id ||
+                      user?.role === "admin") && (
                       <div className="ml-auto flex justify-center items-center gap-2">
-                        <button onClick={() => handleEdit(comment._id)}>
+                        <button
+                          onClick={() => handleEdit(comment._id)}
+                          className="text-blue-500 hover:text-blue-700 mr-2"
+                        >
                           <Pencil />
                         </button>
-                        <button onClick={() => handleDelete(comment._id)}>
-                          <Trash2/>
+                        <button
+                          onClick={() => openModal(comment._id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 />
                         </button>
                       </div>
                     )}
@@ -186,6 +212,12 @@ const PostDetailPage = () => {
           </div>
         </div>
       )}
+      <AlertModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onConfirm={handleDelete}
+        message="Are you sure you want to delete this post?"
+      />
     </div>
   );
 };

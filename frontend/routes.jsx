@@ -15,6 +15,8 @@ import ResetPasswordForm from "./src/components/ResetPasswordForm";
 
 const RoleAccess = ({ roles }) => {
   const { user, setUser } = useContext(UserContext);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -29,13 +31,22 @@ const RoleAccess = ({ roles }) => {
         })
         .catch((err) => {
           console.log(err);
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
+  if (isLoading) {
+    return <div className="flex justify-center item-center">Loading...</div>;
+  }
 
   return !roles.length || roles.includes(user?.role) ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 };
+
 
 const router = createBrowserRouter([
   {

@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { Pencil, Trash2 } from 'lucide-react';
+import AlertModal from '../AlertModal';
 
 const AdminPage = () => {
   const [posts, setPosts] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [postIdToDelete, setPostIdToDelete] = useState(null);
   const token = localStorage.getItem("token")
 
   useEffect(() => {
@@ -19,19 +22,26 @@ const AdminPage = () => {
     fetchPosts();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      try {
-        await axios.delete(`/posts/${id}`,{
-          headers: {
-            Authorization: token,
-          },
-        
-        });
-        setPosts((prevPosts) => prevPosts.filter((post) => post._id !== id));
-      } catch (error) {
-        console.error("Error deleting post:", error);
-      }
+  const openModal = (postId) => {
+    setPostIdToDelete(postId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/posts/${postIdToDelete}`,{
+        headers: {
+          Authorization: token,
+        },
+      });
+      setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postIdToDelete));
+      closeModal();
+    } catch (error) {
+      console.error("Error deleting post:", error);
     }
   };
 
@@ -74,7 +84,7 @@ const AdminPage = () => {
                     <Pencil />
                   </Link>
                   <button
-                    onClick={() => handleDelete(post._id)}
+                    onClick={() => openModal(post._id)}
                     className="text-red-500 hover:text-red-700"
                   >
                     <Trash2 />
@@ -85,6 +95,12 @@ const AdminPage = () => {
           </tbody>
         </table>
       </div>
+      <AlertModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onConfirm={handleDelete}
+        message="Are you sure you want to delete this post?"
+      />
     </div>
   );
 };
